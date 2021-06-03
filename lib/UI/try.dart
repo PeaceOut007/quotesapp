@@ -12,6 +12,29 @@ class _QuotesState extends State<Quotes> {
   AudioPlayer audioPlayer = AudioPlayer();
   AudioPlayerState audioPlayerState = AudioPlayerState.PAUSED;
   AudioCache audioCache;
+
+  Duration position = new Duration();
+  Duration music_l = new Duration();
+
+  Widget slider() {
+    return Container(
+      width: 300.0,
+      child: Slider.adaptive(
+          activeColor: Colors.white,
+          inactiveColor: Colors.grey.shade700,
+          value: position.inSeconds.toDouble(),
+          max: music_l.inSeconds.toDouble(),
+          onChanged: (value) {
+            seekToSec(value.toInt());
+          }),
+    );
+  }
+
+  void seekToSec(int sec) {
+    Duration newPos = Duration(seconds: sec);
+    audioPlayer.seek(newPos);
+  }
+
   List path = ["Audio1.mp3", "Audio2.mp3", "Audio3.mp3"];
   int i = 0;
   int index = 0;
@@ -31,6 +54,16 @@ class _QuotesState extends State<Quotes> {
         audioPlayerState = s;
       });
     });
+    audioPlayer.durationHandler = (d) {
+      setState(() {
+        music_l = d;
+      });
+    };
+    audioPlayer.positionHandler = (p) {
+      setState(() {
+        position = p;
+      });
+    };
   }
 
   @override
@@ -46,12 +79,14 @@ class _QuotesState extends State<Quotes> {
     index++;
   }
 
+  playBack() async {
+    await audioCache.play(path[index % path.length]);
+    index--;
+  }
+
   pauseMusic() async {
     await audioPlayer.pause();
   }
-
-  bool playing = false;
-  IconData playBtn = Icons.play_arrow;
 
   @override
   Widget build(BuildContext context) {
@@ -145,24 +180,46 @@ class _QuotesState extends State<Quotes> {
                       topLeft: Radius.circular(20.0),
                       topRight: Radius.circular(20.0),
                     ),
-                    color: Colors.black,
+                    color: Colors.black.withOpacity(0.5),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      Container(
+                        width: 600.0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "${position.inMinutes}:${position.inSeconds.remainder(60)}",
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            slider(),
+                            Text(
+                              "${music_l.inMinutes}:${music_l.inSeconds.remainder(60)}",
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           IconButton(
-                            iconSize: 40.0,
+                            iconSize: 20.0,
                             color: Colors.white,
                             icon: Icon(Icons.skip_previous),
                             onPressed: _prevSong,
                           ),
                           IconButton(
-                            iconSize: 50.0,
+                            iconSize: 40.0,
                             color: Colors.white,
                             onPressed: () {
                               audioPlayerState == AudioPlayerState.PLAYING
@@ -175,7 +232,7 @@ class _QuotesState extends State<Quotes> {
                                     : Icons.play_arrow),
                           ),
                           IconButton(
-                            iconSize: 40.0,
+                            iconSize: 20.0,
                             color: Colors.white,
                             icon: Icon(Icons.skip_next),
                             onPressed: _nextSong,
@@ -202,12 +259,14 @@ class _QuotesState extends State<Quotes> {
   void _prevSong() {
     setState(() {
       index--;
+      playBack();
     });
   }
 
   void _nextSong() {
     setState(() {
       index++;
+      playMusic();
     });
   }
 }
