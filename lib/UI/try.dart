@@ -76,12 +76,6 @@ class _QuotesState extends State<Quotes> {
 
   playMusic() async {
     await audioCache.play(path[index % path.length]);
-    index++;
-  }
-
-  playBack() async {
-    await audioCache.play(path[index % path.length]);
-    index--;
   }
 
   pauseMusic() async {
@@ -259,7 +253,7 @@ class _QuotesState extends State<Quotes> {
   void _prevSong() {
     setState(() {
       index--;
-      playBack();
+      playMusic();
     });
   }
 
@@ -270,3 +264,4 @@ class _QuotesState extends State<Quotes> {
     });
   }
 }
+
